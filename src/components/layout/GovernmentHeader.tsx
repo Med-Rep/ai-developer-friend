@@ -46,7 +46,7 @@ export function GovernmentHeader({ language, onLanguageChange }: GovernmentHeade
           </div>
           
           <div className="hidden sm:block ml-auto pointer-events-auto">
-            <LanguageSelector onLanguageChange={onLanguageChange} />
+            <LanguageSelector language={language} setLanguage={onLanguageChange} />
           </div>
         </div>
       </div>
