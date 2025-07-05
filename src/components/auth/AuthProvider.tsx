@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -139,24 +140,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Check if it's a test account first
       const testAccount = validateTestCredentials(email, password);
       if (testAccount) {
-        // Create a mock session for test accounts
-        const mockUser = {
+        // Create a complete mock user object for test accounts
+        const mockUser: User = {
           id: `test-${testAccount.role}`,
+          aud: 'authenticated',
+          role: 'authenticated',
           email: testAccount.email,
+          email_confirmed_at: new Date().toISOString(),
+          phone: '',
+          confirmed_at: new Date().toISOString(),
+          last_sign_in_at: new Date().toISOString(),
+          app_metadata: {
+            provider: 'test',
+            providers: ['test']
+          },
           user_metadata: {
             first_name: testAccount.firstName,
             last_name: testAccount.lastName
-          }
-        } as User;
+          },
+          identities: [],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
 
-        const mockSession = {
+        const mockSession: Session = {
           user: mockUser,
           access_token: 'test-token',
           token_type: 'Bearer',
           expires_in: 3600,
-          expires_at: Date.now() + 3600000,
+          expires_at: Math.floor(Date.now() / 1000) + 3600,
           refresh_token: 'test-refresh'
-        } as Session;
+        };
 
         setSession(mockSession);
         setUser(mockUser);
