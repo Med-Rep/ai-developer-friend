@@ -2,9 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { securityMonitor } from '@/utils/enhancedSecurity';
 import { useToast } from '@/hooks/use-toast';
-import { testAccounts, validateTestCredentials, isTestAccount } from '@/utils/testAccounts';
 
 interface AuthContextType {
   user: User | null;
@@ -35,36 +33,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Check if it's a test account first
-          const testAccount = isTestAccount(session.user.email || '');
-          if (testAccount) {
-            setUserRole(testAccount.role);
-            
-            // Log security event for test accounts
-            securityMonitor.logSecurityEvent('test_user_login', {
-              userId: session.user.id,
-              email: session.user.email,
-              role: testAccount.role,
-              timestamp: new Date().toISOString()
-            });
-          } else {
-            // Fetch user role for regular accounts
-            setTimeout(async () => {
-              try {
-                const { data: roleData } = await supabase.rpc('get_current_user_role');
-                setUserRole(roleData);
-                
-                // Log security event
-                securityMonitor.logSecurityEvent('user_login', {
-                  userId: session.user.id,
-                  email: session.user.email,
-                  timestamp: new Date().toISOString()
-                });
-              } catch (error) {
-                console.error('Error fetching user role:', error);
-              }
-            }, 0);
-          }
+          // Fetch user role
+          setTimeout(async () => {
+            try {
+              const { data: roleData } = await supabase.rpc('get_current_user_role');
+              setUserRole(roleData || 'citoyen');
+            } catch (error) {
+              console.error('Error fetching user role:', error);
+              setUserRole('citoyen'); // Default role
+            }
+          }, 0);
         } else {
           setUserRole(null);
         }
@@ -87,18 +65,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, firstName?: string, lastName?: string) => {
     try {
-      // Check if it's a test account
-      const testAccount = isTestAccount(email);
-      if (testAccount) {
-        return { error: { message: 'Ce compte de test existe déjà. Utilisez la connexion.' } };
-      }
-
-      // Validate input for non-test accounts
-      const validation = securityMonitor.validateInput(email, 'email');
-      if (!validation.isValid) {
-        return { error: { message: 'Email invalide détecté' } };
-      }
-
       const redirectUrl = `${window.location.origin}/`;
       
       const { error } = await supabase.auth.signUp({
@@ -114,12 +80,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
-        securityMonitor.logSecurityEvent('signup_failed', {
-          email,
-          error: error.message,
-          timestamp: new Date().toISOString()
-        });
-        
         return { error };
       }
 
@@ -137,71 +97,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      // Check if it's a test account first
-      const testAccount = validateTestCredentials(email, password);
-      if (testAccount) {
-        // Create a complete mock user object for test accounts
-        const mockUser: User = {
-          id: `test-${testAccount.role}`,
-          aud: 'authenticated',
-          role: 'authenticated',
-          email: testAccount.email,
-          email_confirmed_at: new Date().toISOString(),
-          phone: '',
-          confirmed_at: new Date().toISOString(),
-          last_sign_in_at: new Date().toISOString(),
-          app_metadata: {
-            provider: 'test',
-            providers: ['test']
-          },
-          user_metadata: {
-            first_name: testAccount.firstName,
-            last_name: testAccount.lastName
-          },
-          identities: [],
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-
-        const mockSession: Session = {
-          user: mockUser,
-          access_token: 'test-token',
-          token_type: 'Bearer',
-          expires_in: 3600,
-          expires_at: Math.floor(Date.now() / 1000) + 3600,
-          refresh_token: 'test-refresh'
-        };
-
-        setSession(mockSession);
-        setUser(mockUser);
-        setUserRole(testAccount.role);
-
-        toast({
-          title: "Connexion réussie",
-          description: `Bienvenue ${testAccount.firstName} ! (Compte de test)`,
-        });
-
-        return { error: null };
-      }
-
-      // Validate input for regular accounts
-      const validation = securityMonitor.validateInput(email, 'email');
-      if (!validation.isValid) {
-        return { error: { message: 'Email invalide détecté' } };
-      }
-
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        securityMonitor.logSecurityEvent('login_failed', {
-          email,
-          error: error.message,
-          timestamp: new Date().toISOString()
-        });
-
         return { error };
       }
 
@@ -219,29 +120,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      if (user) {
-        // Check if it's a test account
-        const testAccount = isTestAccount(user.email || '');
-        if (testAccount) {
-          // For test accounts, just clear the state
-          setSession(null);
-          setUser(null);
-          setUserRole(null);
-          
-          toast({
-            title: "Déconnexion réussie",
-            description: "À bientôt !",
-          });
-          return;
-        }
-
-        securityMonitor.logSecurityEvent('user_logout', {
-          userId: user.id,
-          email: user.email,
-          timestamp: new Date().toISOString()
-        });
-      }
-
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
 
@@ -257,16 +135,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateProfile = async (updates: any) => {
     try {
       if (!user) return { error: { message: 'Utilisateur non connecté' } };
-
-      // Check if it's a test account
-      const testAccount = isTestAccount(user.email || '');
-      if (testAccount) {
-        toast({
-          title: "Profil de test",
-          description: "Les comptes de test ne peuvent pas être modifiés.",
-        });
-        return { error: { message: 'Les comptes de test ne peuvent pas être modifiés' } };
-      }
 
       const { error } = await supabase
         .from('profiles')

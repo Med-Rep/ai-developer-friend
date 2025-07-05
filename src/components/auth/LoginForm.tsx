@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from './AuthProvider';
 import { Button } from '@/components/ui/button';
@@ -7,8 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Eye, EyeOff, Shield } from 'lucide-react';
-import { securityMonitor } from '@/utils/enhancedSecurity';
-import { TestAccountsInfo } from './TestAccountsInfo';
 
 export function LoginForm() {
   const { signIn, signUp } = useAuth();
@@ -32,20 +31,11 @@ export function LoginForm() {
   });
 
   const validatePassword = (password: string) => {
-    const minLength = password.length >= 8;
-    const hasUpper = /[A-Z]/.test(password);
-    const hasLower = /[a-z]/.test(password);
-    const hasNumber = /\d/.test(password);
-    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    
+    const minLength = password.length >= 6;
     return {
-      isValid: minLength && hasUpper && hasLower && hasNumber && hasSpecial,
+      isValid: minLength,
       errors: [
-        !minLength && "Au moins 8 caractères",
-        !hasUpper && "Au moins une majuscule",
-        !hasLower && "Au moins une minuscule", 
-        !hasNumber && "Au moins un chiffre",
-        !hasSpecial && "Au moins un caractère spécial"
+        !minLength && "Au moins 6 caractères"
       ].filter(Boolean)
     };
   };
@@ -54,21 +44,6 @@ export function LoginForm() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
-    // For test accounts, skip validation
-    const isTestLogin = ['admin@test.com', 'juriste@test.com', 'citoyen@test.com'].includes(loginData.email);
-    
-    if (!isTestLogin) {
-      // Validate inputs for non-test accounts
-      const emailValidation = securityMonitor.validateInput(loginData.email, 'email');
-      const passwordValidation = securityMonitor.validateInput(loginData.password, 'password');
-      
-      if (!emailValidation.isValid || !passwordValidation.isValid) {
-        setError('Données d\'entrée invalides détectées');
-        setLoading(false);
-        return;
-      }
-    }
 
     try {
       const { error } = await signIn(loginData.email, loginData.password);
@@ -91,16 +66,8 @@ export function LoginForm() {
     setLoading(true);
     setError(null);
 
-    // Validate inputs
-    const emailValidation = securityMonitor.validateInput(signupData.email, 'email');
     const passwordValidation = validatePassword(signupData.password);
     
-    if (!emailValidation.isValid) {
-      setError('Email invalide détecté');
-      setLoading(false);
-      return;
-    }
-
     if (!passwordValidation.isValid) {
       setError('Mot de passe trop faible: ' + passwordValidation.errors.join(', '));
       setLoading(false);
@@ -136,7 +103,7 @@ export function LoginForm() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="w-full max-w-md space-y-4">
+      <div className="w-full max-w-md">
         <Card>
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
@@ -302,8 +269,6 @@ export function LoginForm() {
             </Tabs>
           </CardContent>
         </Card>
-
-        <TestAccountsInfo />
       </div>
     </div>
   );
