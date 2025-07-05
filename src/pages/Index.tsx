@@ -22,6 +22,7 @@ const VALID_SECTIONS = new Set([
 const Index = () => {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [language, setLanguage] = useState("fr");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Validation de section avec callback mémorisé
   const handleSectionChange = useCallback((section: string) => {
@@ -71,11 +72,11 @@ const Index = () => {
 
   // Props mémorisées pour éviter les re-rendus inutiles
   const headerProps = useMemo(() => ({
+    sidebarOpen,
+    setSidebarOpen,
     language,
-    activeSection,
-    onLanguageChange: handleLanguageChange,
-    onSectionChange: handleSectionChange
-  }), [language, activeSection, handleLanguageChange, handleSectionChange]);
+    setLanguage: handleLanguageChange
+  }), [sidebarOpen, language, handleLanguageChange]);
 
   const navigationProps = useMemo(() => ({
     onSectionChange: handleSectionChange,

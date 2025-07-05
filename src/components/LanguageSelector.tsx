@@ -11,20 +11,17 @@ const languages = [
 ];
 
 interface LanguageSelectorProps {
-  onLanguageChange?: (language: string) => void;
+  language: string;
+  setLanguage: (language: string) => void;
 }
 
-export function LanguageSelector({ onLanguageChange }: LanguageSelectorProps) {
-  const [selectedLang, setSelectedLang] = useState('fr');
+export function LanguageSelector({ language, setLanguage }: LanguageSelectorProps) {
   const [open, setOpen] = useState(false);
 
-  const currentLanguage = languages.find(lang => lang.code === selectedLang);
+  const currentLanguage = languages.find(lang => lang.code === language);
 
   const handleLanguageChange = (languageCode: string) => {
-    setSelectedLang(languageCode);
-    if (onLanguageChange) {
-      onLanguageChange(languageCode);
-    }
+    setLanguage(languageCode);
     setOpen(false);
   };
 
@@ -40,18 +37,18 @@ export function LanguageSelector({ onLanguageChange }: LanguageSelectorProps) {
       </PopoverTrigger>
       <PopoverContent className="w-48 p-1" align="end">
         <div className="space-y-1">
-          {languages.map((language) => (
+          {languages.map((lang) => (
             <Button
-              key={language.code}
+              key={lang.code}
               variant="ghost"
               className={`w-full justify-start gap-3 ${
-                selectedLang === language.code ? 'bg-gray-100' : ''
+                language === lang.code ? 'bg-gray-100' : ''
               }`}
-              onClick={() => handleLanguageChange(language.code)}
+              onClick={() => handleLanguageChange(lang.code)}
             >
-              <span className="text-lg">{language.flag}</span>
-              <span className="flex-1">{language.name}</span>
-              {selectedLang === language.code && (
+              <span className="text-lg">{lang.flag}</span>
+              <span className="flex-1">{lang.name}</span>
+              {language === lang.code && (
                 <Check className="w-4 h-4 text-emerald-600" />
               )}
             </Button>
