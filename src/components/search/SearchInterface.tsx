@@ -1,152 +1,173 @@
 
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Search, Loader2, Eye, Download, Share } from "lucide-react";
-import { SearchService, SearchResult } from './SearchService';
-import { EnhancedInput } from '@/components/common/EnhancedInput';
+import React, { useState, useCallback, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { EnhancedSearchInput } from '@/components/common/EnhancedSearchInput';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Search, Filter, Download, BookOpen, FileText } from 'lucide-react';
+import { useOptimizedSearch } from '@/hooks/useOptimizedSearch';
 
 interface SearchInterfaceProps {
+  onSearch?: (query: string, filters?: any) => void;
   placeholder?: string;
-  title?: string;
-  description?: string;
+  context?: 'search' | 'legal' | 'procedure' | 'general';
 }
 
 export function SearchInterface({ 
-  placeholder = "Rechercher dans tous les contenus...",
-  title = "Recherche",
-  description = "Trouvez rapidement les informations dont vous avez besoin"
+  onSearch, 
+  placeholder = "Rechercher dans la base de données...",
+  context = 'search'
 }: SearchInterfaceProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const { results, isLoading, search } = useOptimizedSearch();
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
-    
-    setLoading(true);
-    setHasSearched(true);
-    
-    try {
-      const searchResults = await SearchService.searchAll(searchQuery.trim());
-      setResults(searchResults);
-    } catch (error) {
-      console.error('Search error:', error);
-      setResults([]);
-    } finally {
-      setLoading(false);
+  const handleSearch = useCallback(() => {
+    if (searchQuery.trim()) {
+      search(searchQuery, { filters: activeFilters });
+      onSearch?.(searchQuery, { filters: activeFilters });
     }
-  };
+  }, [searchQuery, activeFilters, search, onSearch]);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  };
+  const recentSearches = useMemo(() => [
+    "Droit du travail",
+    "Code civil",
+    "Procédure administrative",
+    "Jurisprudence constitutionnelle"
+  ], []);
+
+  const popularQueries = useMemo(() => [
+    { query: "Divorce", count: 1247, type: "Droit civil" },
+    { query: "Contrat de travail", count: 892, type: "Droit du travail" },
+    { query: "Permis de construire", count: 654, type: "Droit administratif" },
+    { query: "Société commerciale", count: 423, type: "Droit commercial" }
+  ], []);
 
   return (
     <div className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4 flex items-center justify-center gap-2">
-          <Search className="w-8 h-8 text-emerald-600" />
-          {title}
-        </h2>
-        <p className="text-gray-600 text-lg">
-          {description}
-        </p>
-      </div>
-
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex gap-2">
-            <EnhancedInput
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={placeholder}
-              context="search"
-              className="flex-1"
-              onKeyPress={handleKeyPress}
-              enableVoice={true}
-            />
-            <Button 
-              onClick={handleSearch}
-              disabled={loading || !searchQuery.trim()}
-              className="bg-emerald-600 hover:bg-emerald-700"
-            >
-              {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              ) : (
-                <Search className="w-4 h-4 mr-2" />
-              )}
-              {loading ? "Recherche..." : "Rechercher"}
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Search className="w-5 h-5 text-primary" />
+            Recherche Avancée
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <EnhancedSearchInput
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder={placeholder}
+                context={context}
+                onSearch={handleSearch}
+              />
+            </div>
+            <Button onClick={handleSearch} disabled={isLoading}>
+              <Search className="w-4 h-4 mr-2" />
+              Rechercher
+            </Button>
+            <Button variant="outline">
+              <Filter className="w-4 h-4 mr-2" />
+              Filtres
             </Button>
           </div>
+
+          {activeFilters.length > 0 && (
+            <div className="flex gap-2">
+              {activeFilters.map((filter, index) => (
+                <Badge key={index} variant="secondary" className="gap-1">
+                  {filter}
+                  <button onClick={() => setActiveFilters(prev => prev.filter(f => f !== filter))}>
+                    ×
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Résultats de recherche */}
-      {hasSearched && (
-        <div className="space-y-4">
-          <h3 className="text-xl font-semibold text-gray-900">
-            {loading ? "Recherche en cours..." : `Résultats de recherche (${results.length})`}
-          </h3>
-          
-          {!loading && results.length === 0 && (
-            <Card>
-              <CardContent className="pt-6 text-center">
-                <div className="text-gray-500">
-                  <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg font-medium mb-2">Aucun résultat trouvé</p>
-                  <p className="text-sm">Essayez avec d'autres mots-clés ou utilisez la recherche avancée</p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          {results.map((result) => (
-            <Card key={result.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="pt-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge className={result.type === 'legal_text' ? 'bg-blue-500 text-white' : 'bg-green-500 text-white'}>
-                        {result.type === 'legal_text' ? 'Texte juridique' : 'Procédure'}
-                      </Badge>
-                      <Badge variant="outline">{result.category}</Badge>
-                      <Badge variant="secondary" className="text-xs">
-                        {Math.round(result.relevance * 100)}% pertinent
-                      </Badge>
-                    </div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                      {result.title}
-                    </h4>
-                    <p className="text-gray-600 mb-2 line-clamp-2">
-                      {result.description}
-                    </p>
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
-                      {result.institution && (
-                        <span>{result.institution}</span>
-                      )}
-                      <span>Mis à jour: {new Date(result.lastUpdate).toLocaleDateString('fr-FR')}</span>
-                    </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Recherches Récentes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {recentSearches.map((search, index) => (
+                <button
+                  key={index}
+                  onClick={() => setSearchQuery(search)}
+                  className="w-full text-left p-2 hover:bg-gray-50 rounded-md text-sm"
+                >
+                  {search}
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Recherches Populaires</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {popularQueries.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-md cursor-pointer"
+                  onClick={() => setSearchQuery(item.query)}
+                >
+                  <div>
+                    <p className="font-medium text-sm">{item.query}</p>
+                    <p className="text-xs text-gray-600">{item.type}</p>
                   </div>
-                  <div className="flex gap-2 ml-4">
-                    <Button variant="outline" size="sm">
-                      <Eye className="w-4 h-4 mr-1" />
-                      Consulter
-                    </Button>
-                    <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700">
-                      <Download className="w-4 h-4 mr-1" />
-                      Utiliser
-                    </Button>
+                  <Badge variant="outline">{item.count}</Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {results.length > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Résultats ({results.length})</CardTitle>
+              <Button variant="outline" size="sm">
+                <Download className="w-4 h-4 mr-2" />
+                Exporter
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {results.map((result, index) => (
+                <div key={index} className="border-l-4 border-primary pl-4 py-2">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-primary">{result.title}</h4>
+                      <p className="text-sm text-gray-600 mt-1">{result.excerpt}</p>
+                      <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                        <span className="flex items-center gap-1">
+                          {result.type === 'legal' ? <BookOpen className="w-3 h-3" /> : <FileText className="w-3 h-3" />}
+                          {result.type === 'legal' ? 'Texte juridique' : 'Procédure'}
+                        </span>
+                        <span>{result.date}</span>
+                      </div>
+                    </div>
+                    <Badge variant={result.type === 'legal' ? 'default' : 'secondary'}>
+                      {result.domain}
+                    </Badge>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
