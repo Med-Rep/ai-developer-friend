@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -50,11 +49,16 @@ export function VoiceSearchInput({
     startListening, 
     stopListening, 
     resetTranscript 
-  } = useVoiceRecognition({
-    continuous: false,
-    interimResults: true,
-    language: 'fr-FR'
-  });
+  } = useVoiceRecognition(
+    (result: string) => {
+      onChange(result);
+    },
+    {
+      continuous: false,
+      interimResults: true,
+      language: 'fr-FR'
+    }
+  );
 
   // Suggestions prédéfinies par contexte
   const defaultSuggestions: Record<string, SuggestionItem[]> = {
@@ -87,13 +91,6 @@ export function VoiceSearchInput({
       { id: '3', text: 'procédures en ligne', type: 'suggestion' }
     ]
   };
-
-  // Mettre à jour la valeur depuis la reconnaissance vocale
-  useEffect(() => {
-    if (transcript && transcript.trim() !== '') {
-      onChange(transcript);
-    }
-  }, [transcript, onChange]);
 
   // Filtrer les suggestions en fonction de la saisie
   useEffect(() => {

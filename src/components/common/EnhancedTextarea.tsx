@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -48,11 +47,18 @@ export function EnhancedTextarea({
     startListening, 
     stopListening, 
     resetTranscript 
-  } = useVoiceRecognition({
-    continuous: false,
-    interimResults: true,
-    language: 'fr-FR'
-  });
+  } = useVoiceRecognition(
+    (result: string) => {
+      const currentValue = (value as string) || '';
+      const newValue = currentValue + (currentValue ? ' ' : '') + result;
+      onChange?.({ target: { value: newValue } } as any);
+    },
+    {
+      continuous: false,
+      interimResults: true,
+      language: 'fr-FR'
+    }
+  );
 
   // Suggestions prédéfinies par contexte
   const defaultSuggestions: Record<string, SuggestionItem[]> = {
@@ -79,15 +85,6 @@ export function EnhancedTextarea({
       { id: '2', text: 'documentation officielle', type: 'suggestion' }
     ]
   };
-
-  // Mettre à jour la valeur depuis la reconnaissance vocale
-  useEffect(() => {
-    if (transcript && transcript.trim() !== '') {
-      const currentValue = (value as string) || '';
-      const newValue = currentValue + (currentValue ? ' ' : '') + transcript;
-      onChange?.({ target: { value: newValue } } as any);
-    }
-  }, [transcript, onChange, value]);
 
   // Filtrer les suggestions en fonction de la saisie
   useEffect(() => {
