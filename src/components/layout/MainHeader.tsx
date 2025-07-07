@@ -1,13 +1,8 @@
-import { Button } from "@/components/ui/button";
-import { Bell, User, Search, MessageSquare, Menu, Star, Bot } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LanguageSelector } from "@/components/LanguageSelector";
-import { NotificationDropdown } from "@/components/NotificationDropdown";
-import { AccountDropdown } from "@/components/AccountDropdown";
-import { MessagesDropdown } from "@/components/MessagesDropdown";
-import { MainNavigation } from "@/components/MainNavigation";
-import { EnhancedInput } from "@/components/common/EnhancedInput";
-import { useCallback, useMemo, useState } from "react";
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Bell, Menu, User, Settings, LogOut, Search } from 'lucide-react';
+import { GlobalSearchBar } from './GlobalSearchBar';
 
 interface MainHeaderProps {
   language: string;
@@ -17,141 +12,130 @@ interface MainHeaderProps {
 }
 
 export function MainHeader({ language, activeSection, onLanguageChange, onSectionChange }: MainHeaderProps) {
-  const [quickSearchValue, setQuickSearchValue] = useState('');
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
-  const getHeaderText = useCallback((key: string) => {
-    const translations = {
-      fr: {
-        title: "dalil.dz",
-        subtitle: "Plateforme de veille juridique et réglementaire",
-        searchPlaceholder: "Recherche rapide..."
-      },
-      ar: {
-        title: "dalil.dz",
-        subtitle: "منصة المراقبة القانونية والتنظيمية",
-        searchPlaceholder: "بحث سريع..."
-      },
-      en: {
-        title: "dalil.dz",
-        subtitle: "Legal and regulatory monitoring platform",
-        searchPlaceholder: "Quick search..."
-      }
-    };
-    return translations[language as keyof typeof translations]?.[key as keyof typeof translations['fr']] || key;
-  }, [language]);
-
-  const handleFavoritesClick = useCallback(() => {
-    onSectionChange("favorites");
-  }, [onSectionChange]);
-
-  const handleAISearchClick = useCallback(() => {
-    onSectionChange("ai-search");
-  }, [onSectionChange]);
-
-  const handleQuickSearchKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && quickSearchValue.trim()) {
-      onSectionChange("search");
-    }
-  }, [quickSearchValue, onSectionChange]);
-
-  const headerTexts = useMemo(() => ({
-    title: getHeaderText("title"),
-    subtitle: getHeaderText("subtitle"),
-    searchPlaceholder: getHeaderText("searchPlaceholder")
-  }), [getHeaderText]);
+  const handleGlobalSearch = (query: string) => {
+    console.log('Recherche globale:', query);
+    // Rediriger vers la page de recherche avec la requête
+    onSectionChange('advanced-search');
+  };
 
   return (
-    <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-2 sticky top-0 z-50" role="banner">
-      <div className="container mx-auto max-w-7xl">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="flex items-center gap-3">
-              <div className="w-16 h-12 bg-white rounded flex items-center justify-center flex-shrink-0 border border-green-600">
-                <img 
-                  src="/lovable-uploads/cb1cbfba-f598-40da-acf6-b43632c703c6.png" 
-                  alt="Logo dalil.dz" 
-                  className="w-full h-full object-contain"
-                />
+    <header className="bg-white border-b border-gray-200 shadow-sm">
+      <div className="container mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo et titre */}
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">JA</span>
               </div>
-              <div className="min-w-0">
-                <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">{headerTexts.title}</h1>
-                <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">{headerTexts.subtitle}</p>
+              <div className="hidden sm:block">
+                <h1 className="text-lg font-semibold text-gray-900">
+                  Juridique Algérien
+                </h1>
+                <p className="text-xs text-gray-600">
+                  Plateforme Officielle
+                </p>
               </div>
             </div>
           </div>
 
-          <div className="flex-1 max-w-md mx-4 hidden md:block">
-            <EnhancedInput
-              value={quickSearchValue}
-              onChange={(e) => setQuickSearchValue(e.target.value)}
-              placeholder={headerTexts.searchPlaceholder}
-              context="general"
-              onKeyPress={handleQuickSearchKeyPress}
-              className="bg-gray-50 border-gray-200 text-sm"
-              enableVoice={true}
+          {/* Barre de recherche globale */}
+          <div className="hidden md:flex flex-1 max-w-2xl mx-8">
+            <GlobalSearchBar
+              onSearch={handleGlobalSearch}
+              placeholder="Rechercher textes juridiques, procédures..."
+              className="w-full"
             />
           </div>
-          
-          <div className="flex items-center gap-1 sm:gap-2">
-            <div className="sm:hidden">
-              <LanguageSelector onLanguageChange={onLanguageChange} />
-            </div>
-            
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleFavoritesClick}
-              className="relative hidden sm:flex p-2"
-              title="Favoris"
-              aria-label="Voir les favoris"
+
+          {/* Actions et menu utilisateur */}
+          <div className="flex items-center space-x-3">
+            {/* Recherche mobile */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="md:hidden"
+              onClick={() => onSectionChange('advanced-search')}
             >
-              <Star className="w-4 h-4" aria-hidden="true" />
+              <Search className="w-5 h-5" />
             </Button>
-            
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleAISearchClick}
-              className="relative hidden sm:flex p-2"
-              title="Recherche IA"
-              aria-label="Recherche avec intelligence artificielle"
+
+            {/* Notifications */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowNotifications(!showNotifications)}
             >
-              <Bot className="w-4 h-4" aria-hidden="true" />
+              <Bell className="w-5 h-5" />
+              <Badge
+                variant="secondary"
+                className="absolute top-1 right-1 rounded-full px-1 py-0.5 text-xs"
+              >
+                3
+              </Badge>
             </Button>
-            
-            <MessagesDropdown />
-            <NotificationDropdown />
-            <AccountDropdown />
-            
-            <Sheet>
-              <SheetTrigger asChild className="md:hidden">
-                <Button variant="ghost" size="sm" aria-label="Ouvrir le menu de navigation">
-                  <Menu className="w-5 h-5" aria-hidden="true" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-80 p-0" aria-label="Menu de navigation mobile">
-                <div className="p-4">
-                  <div className="relative mb-4">
-                    <EnhancedInput
-                      value={quickSearchValue}
-                      onChange={(e) => setQuickSearchValue(e.target.value)}
-                      placeholder={headerTexts.searchPlaceholder}
-                      context="general"
-                      onKeyPress={handleQuickSearchKeyPress}
-                      className="bg-gray-50 border-gray-200"
-                      enableVoice={true}
-                    />
-                  </div>
-                  <MainNavigation 
-                    onSectionChange={onSectionChange} 
-                    activeSection={activeSection}
-                    isMobile={true}
-                    language={language}
-                  />
+
+            {/* Menu utilisateur */}
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowUserMenu(!showUserMenu)}
+              >
+                <User className="w-5 h-5" />
+              </Button>
+              {showUserMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                  <a
+                    href="#"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      onSectionChange('user-management');
+                    }}
+                  >
+                    <Settings className="w-4 h-4" />
+                    Paramètres
+                  </a>
+                  <a
+                    href="#"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      // Déconnexion simulée
+                      alert('Déconnexion réussie!');
+                    }}
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Déconnexion
+                  </a>
                 </div>
-              </SheetContent>
-            </Sheet>
+              )}
+            </div>
+
+            {/* Menu mobile */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="sm:hidden"
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
           </div>
+        </div>
+
+        {/* Menu mobile de recherche */}
+        <div className="md:hidden border-t border-gray-100 py-3">
+          <GlobalSearchBar
+            onSearch={handleGlobalSearch}
+            placeholder="Rechercher..."
+            className="w-full"
+          />
         </div>
       </div>
     </header>
