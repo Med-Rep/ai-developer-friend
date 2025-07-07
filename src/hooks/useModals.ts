@@ -24,7 +24,10 @@ export function useModals() {
     tagManager: { isOpen: false, tag: null as any },
     workflowManager: { isOpen: false, workflow: null as any },
     geolocationSearch: { isOpen: false, location: null as any },
-    notification: { isOpen: false, notification: null as any }
+    notification: { isOpen: false, notification: null as any },
+    approval: { isOpen: false, data: null as any, type: 'legal-text' as 'legal-text' | 'procedure' },
+    procedureSummary: { isOpen: false, data: null as any },
+    generic: { isOpen: false, title: '', content: null as any, size: 'medium' as 'small' | 'medium' | 'large', primaryAction: null as any, secondaryAction: null as any, alert: null as any, loading: false }
   });
 
   const openModal = useCallback((modalName: keyof typeof modals, data?: any) => {

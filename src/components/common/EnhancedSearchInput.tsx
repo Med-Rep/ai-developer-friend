@@ -24,11 +24,14 @@ export function EnhancedSearchInput({
   onSearch
 }: EnhancedSearchInputProps) {
   const [isListening, setIsListening] = useState(false);
-  const { startListening, stopListening, isSupported } = useVoiceRecognition({
-    onResult: onChange,
-    onStart: () => setIsListening(true),
-    onEnd: () => setIsListening(false)
-  });
+  
+  const { startListening, stopListening, isSupported } = useVoiceRecognition(
+    onChange,
+    {
+      onStart: () => setIsListening(true),
+      onEnd: () => setIsListening(false)
+    }
+  );
 
   const handleVoiceToggle = useCallback(() => {
     if (isListening) {
