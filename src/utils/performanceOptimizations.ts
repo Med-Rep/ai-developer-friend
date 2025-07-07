@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { performanceMonitor } from './performanceMonitor';
 
 export class PerformanceOptimizations {
@@ -28,31 +29,31 @@ export class PerformanceOptimizations {
       ttl
     });
 
-    performanceMonitor.recordMetric('cache_set', Date.now(), 'cache');
+    performanceMonitor.recordMetric('cache_set', Date.now(), 'memory');
   }
 
   getCache(key: string): any | null {
     const cached = this.cache.get(key);
     
     if (!cached) {
-      performanceMonitor.recordMetric('cache_miss', Date.now(), 'cache');
+      performanceMonitor.recordMetric('cache_miss', Date.now(), 'memory');
       return null;
     }
 
     // Vérifier si le cache est expiré
     if (Date.now() - cached.timestamp > cached.ttl) {
       this.cache.delete(key);
-      performanceMonitor.recordMetric('cache_expired', Date.now(), 'cache');
+      performanceMonitor.recordMetric('cache_expired', Date.now(), 'memory');
       return null;
     }
 
-    performanceMonitor.recordMetric('cache_hit', Date.now(), 'cache');
+    performanceMonitor.recordMetric('cache_hit', Date.now(), 'memory');
     return cached.data;
   }
 
   clearCache(): void {
     this.cache.clear();
-    performanceMonitor.recordMetric('cache_cleared', Date.now(), 'cache');
+    performanceMonitor.recordMetric('cache_cleared', Date.now(), 'memory');
   }
 
   // Debounce pour les recherches
@@ -85,7 +86,9 @@ export class PerformanceOptimizations {
   }
 
   // Lazy loading pour les composants
-  createLazyComponent<T>(importFunc: () => Promise<{ default: T }>) {
+  createLazyComponent<T extends React.ComponentType<any>>(
+    importFunc: () => Promise<{ default: T }>
+  ): React.LazyExoticComponent<T> {
     return React.lazy(importFunc);
   }
 

@@ -4,12 +4,19 @@ import { useState, useCallback, useRef } from 'react';
 interface VoiceRecognitionOptions {
   onStart?: () => void;
   onEnd?: () => void;
+  continuous?: boolean;
+  interimResults?: boolean;
+  language?: string;
 }
 
 interface VoiceRecognitionHook {
   startListening: () => void;
   stopListening: () => void;
   isSupported: boolean;
+  isListening: boolean;
+  transcript: string;
+  error: string | null;
+  resetTranscript: () => void;
 }
 
 export function useVoiceRecognition(
@@ -17,7 +24,15 @@ export function useVoiceRecognition(
   options: VoiceRecognitionOptions = {}
 ): VoiceRecognitionHook {
   const [isSupported] = useState(() => 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window);
+  const [isListening, setIsListening] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
+
+  const resetTranscript = useCallback(() => {
+    setTranscript('');
+    setError(null);
+  }, []);
 
   const startListening = useCallback(() => {
     if (!isSupported) return;
@@ -26,33 +41,39 @@ export function useVoiceRecognition(
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       recognitionRef.current = new SpeechRecognition();
       
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
-      recognitionRef.current.lang = 'fr-FR';
+      recognitionRef.current.continuous = options.continuous || false;
+      recognitionRef.current.interimResults = options.interimResults || false;
+      recognitionRef.current.lang = options.language || 'fr-FR';
 
       recognitionRef.current.onstart = () => {
+        setIsListening(true);
+        setError(null);
         options.onStart?.();
       };
 
       recognitionRef.current.onresult = (event: any) => {
         if (event.results.length > 0) {
-          const transcript = event.results[0][0].transcript;
-          onResult(transcript);
+          const result = event.results[0][0].transcript;
+          setTranscript(result);
+          onResult(result);
         }
       };
 
       recognitionRef.current.onend = () => {
+        setIsListening(false);
         options.onEnd?.();
       };
 
       recognitionRef.current.onerror = (event: any) => {
-        console.error('Erreur de reconnaissance vocale:', event.error);
+        setError(`Erreur de reconnaissance vocale: ${event.error}`);
+        setIsListening(false);
         options.onEnd?.();
       };
 
       recognitionRef.current.start();
     } catch (error) {
-      console.error('Erreur lors du démarrage de la reconnaissance vocale:', error);
+      setError('Erreur lors du démarrage de la reconnaissance vocale');
+      setIsListening(false);
     }
   }, [isSupported, onResult, options]);
 
@@ -60,11 +81,16 @@ export function useVoiceRecognition(
     if (recognitionRef.current) {
       recognitionRef.current.stop();
     }
+    setIsListening(false);
   }, []);
 
   return {
     startListening,
     stopListening,
-    isSupported
+    isSupported,
+    isListening,
+    transcript,
+    error,
+    resetTranscript
   };
 }

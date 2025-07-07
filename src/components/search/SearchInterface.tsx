@@ -95,13 +95,13 @@ export function SearchInterface({
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {recentSearches.map((search, index) => (
+              {recentSearches.map((searchItem, index) => (
                 <button
                   key={index}
-                  onClick={() => setSearchQuery(search)}
+                  onClick={() => setSearchQuery(searchItem)}
                   className="w-full text-left p-2 hover:bg-gray-50 rounded-md text-sm"
                 >
-                  {search}
+                  {searchItem}
                 </button>
               ))}
             </div>

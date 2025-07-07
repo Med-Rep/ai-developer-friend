@@ -9,7 +9,12 @@ import { AIInsightsRecommendations } from '@/components/analytics/AIInsightsReco
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart3, FileText, Brain, TrendingUp, GitCompare } from 'lucide-react';
 
-export function AnalysisReportsSections() {
+interface AnalysisReportsSectionsProps {
+  section?: string;
+  language?: string;
+}
+
+export function AnalysisReportsSections({ section, language = 'fr' }: AnalysisReportsSectionsProps) {
   const [activeMainTab, setActiveMainTab] = useState('reports');
 
   const reportTabs = [

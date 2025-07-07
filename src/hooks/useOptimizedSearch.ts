@@ -1,65 +1,72 @@
 
-import { useState, useEffect, useMemo } from 'react';
-import { debounce } from '@/utils/performance';
-import { enhancedCache } from '@/utils/enhancedCache';
+import { useState, useCallback } from 'react';
 
-interface SearchOptions {
-  debounceMs?: number;
-  cacheKey?: string;
-  cacheTtl?: number;
+interface SearchResult {
+  id: string;
+  title: string;
+  excerpt: string;
+  type: 'legal' | 'procedure';
+  domain: string;
+  date: string;
 }
 
-export function useOptimizedSearch<T>(
-  searchFunction: (query: string) => Promise<T[]>,
-  options: SearchOptions = {}
-) {
-  const { debounceMs = 300, cacheKey = 'search', cacheTtl = 300000 } = options;
-  
+interface SearchOptions {
+  filters?: string[];
+}
+
+interface UseOptimizedSearchReturn {
+  query: string;
+  setQuery: (query: string) => void;
+  results: SearchResult[];
+  isLoading: boolean;
+  error: string;
+  search: (searchQuery: string, options?: SearchOptions) => void;
+  clearResults: () => void;
+}
+
+export function useOptimizedSearch(): UseOptimizedSearchReturn {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<T[]>([]);
+  const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState('');
 
-  const debouncedSearch = useMemo(
-    () => debounce(async (searchQuery: string) => {
-      if (!searchQuery.trim()) {
-        setResults([]);
-        setIsLoading(false);
-        return;
-      }
+  const search = useCallback((searchQuery: string, options?: SearchOptions) => {
+    if (!searchQuery.trim()) return;
 
-      setIsLoading(true);
-      setError(null);
+    setIsLoading(true);
+    setError('');
 
-      try {
-        // Vérifier le cache
-        const cachedResults = enhancedCache.get(`${cacheKey}_${searchQuery}`) as T[] | null;
-        if (cachedResults) {
-          setResults(cachedResults);
-          setIsLoading(false);
-          return;
+    // Simulation d'une recherche
+    setTimeout(() => {
+      const mockResults: SearchResult[] = [
+        {
+          id: '1',
+          title: `Résultat pour "${searchQuery}"`,
+          excerpt: 'Extrait du document correspondant à votre recherche...',
+          type: 'legal',
+          domain: 'Droit civil',
+          date: '2024-01-15'
+        },
+        {
+          id: '2',
+          title: `Procédure liée à "${searchQuery}"`,
+          excerpt: 'Description de la procédure administrative...',
+          type: 'procedure',
+          domain: 'Administration',
+          date: '2024-01-10'
         }
+      ];
 
-        // Exécuter la recherche
-        const searchResults = await searchFunction(searchQuery);
-        
-        // Mettre en cache les résultats
-        enhancedCache.set(`${cacheKey}_${searchQuery}`, searchResults, cacheTtl);
-        
-        setResults(searchResults);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erreur de recherche');
-        setResults([]);
-      } finally {
-        setIsLoading(false);
-      }
-    }, debounceMs),
-    [searchFunction, cacheKey, cacheTtl, debounceMs]
-  );
+      setResults(mockResults);
+      setIsLoading(false);
+    }, 1000);
+  }, []);
 
-  useEffect(() => {
-    debouncedSearch(query);
-  }, [query, debouncedSearch]);
+  const clearResults = useCallback(() => {
+    setResults([]);
+    setQuery('');
+    setError('');
+  }, []);
 
   return {
     query,
@@ -67,6 +74,7 @@ export function useOptimizedSearch<T>(
     results,
     isLoading,
     error,
-    clearResults: () => setResults([])
+    search,
+    clearResults
   };
 }
