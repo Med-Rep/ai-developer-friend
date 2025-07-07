@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { VoiceSearchInput } from '@/components/common/VoiceSearchInput';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Bot, Search, Clock, FileText, BarChart3, Users, Sparkles, History } from 'lucide-react';
 import { SectionHeader } from './common/SectionHeader';
@@ -64,7 +64,7 @@ export function AILegalAssistant() {
         iconColor="text-green-600"
       />
 
-      {/* Search Section avec reconnaissance vocale */}
+      {/* Search Section */}
       <Card className="border-2 border-green-200">
         <CardContent className="p-6">
           <div className="space-y-4">
@@ -77,14 +77,12 @@ export function AILegalAssistant() {
             </p>
             
             <div className="relative">
-              <VoiceSearchInput
+              <Input
                 placeholder="Ex: Je souhaite créer une SARL, quelles sont les étapes à suivre et quels documents sont nécessaires ?"
                 value={query}
-                onChange={setQuery}
-                context="legal"
-                className="text-base py-6"
+                onChange={(e) => setQuery(e.target.value)}
+                className="pr-32 text-base py-6"
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                showVoiceButton={true}
               />
               <Button
                 onClick={handleSearch}

@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Filter } from "lucide-react";
-import { VoiceSearchInput } from "@/components/common/VoiceSearchInput";
+import { EnhancedInput } from "@/components/common/EnhancedInput";
 
 interface SearchFilterProps {
   searchTerm: string;
@@ -15,12 +15,12 @@ export function SearchFilter({ searchTerm, onSearchChange }: SearchFilterProps) 
       <CardContent className="pt-6">
         <div className="flex gap-4">
           <div className="flex-1">
-            <VoiceSearchInput
+            <EnhancedInput
               value={searchTerm}
-              onChange={onSearchChange}
+              onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Rechercher dans vos recherches sauvegardées..."
               context="search"
-              showVoiceButton={true}
+              enableVoice={true}
             />
           </div>
           <Button variant="outline" onClick={() => (window as any).actionHandlers?.handleFilter?.()}>

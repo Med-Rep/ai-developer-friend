@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { VoiceSearchInput } from "@/components/common/VoiceSearchInput";
+import { EnhancedInput } from "@/components/common/EnhancedInput";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Filter, MapPin, Calendar, Building, Star } from "lucide-react";
@@ -91,13 +91,13 @@ export function UnifiedSearchInterface({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex gap-2">
-                  <VoiceSearchInput
+                  <EnhancedInput
                     placeholder={type.placeholder}
                     value={searchQuery}
-                    onChange={setSearchQuery}
-                    context="search"
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     className="flex-1"
-                    showVoiceButton={true}
+                    context="search"
+                    enableVoice={true}
                   />
                   <Button 
                     onClick={handleSearch}

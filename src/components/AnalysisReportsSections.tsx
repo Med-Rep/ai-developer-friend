@@ -6,9 +6,8 @@ import { PredefinedReportTemplates } from '@/components/reports/PredefinedReport
 import { PerformanceAnalysis } from '@/components/analytics/PerformanceAnalysis';
 import { ComparativeAnalysis } from '@/components/analytics/ComparativeAnalysis';
 import { AIInsightsRecommendations } from '@/components/analytics/AIInsightsRecommendations';
-import { AnalyticsDashboardsSection } from '@/components/analytics/AnalyticsDashboardsSection';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BarChart3, FileText, TrendingUp } from 'lucide-react';
+import { BarChart3, FileText, Brain, TrendingUp, GitCompare } from 'lucide-react';
 
 interface AnalysisReportsSectionsProps {
   section?: string;
@@ -16,7 +15,7 @@ interface AnalysisReportsSectionsProps {
 }
 
 export function AnalysisReportsSections({ section, language = 'fr' }: AnalysisReportsSectionsProps) {
-  const [activeTab, setActiveTab] = useState('dashboards');
+  const [activeMainTab, setActiveMainTab] = useState('reports');
 
   const reportTabs = [
     {
@@ -43,13 +42,13 @@ export function AnalysisReportsSections({ section, language = 'fr' }: AnalysisRe
     {
       id: 'comparative',
       label: 'Analyse Comparative',
-      icon: TrendingUp,
+      icon: GitCompare,
       content: <ComparativeAnalysis />
     },
     {
       id: 'ai-insights',
       label: 'Insights IA & Recommandations',
-      icon: TrendingUp,
+      icon: Brain,
       content: <AIInsightsRecommendations />
     }
   ];
@@ -63,37 +62,17 @@ export function AnalysisReportsSections({ section, language = 'fr' }: AnalysisRe
         </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 max-w-lg mx-auto">
-          <TabsTrigger value="dashboards" className="gap-2">
-            <BarChart3 className="w-4 h-4" />
-            Tableaux de bord
-          </TabsTrigger>
-          <TabsTrigger value="analysis" className="gap-2">
-            <TrendingUp className="w-4 h-4" />
-            Analyses
-          </TabsTrigger>
+      <Tabs value={activeMainTab} onValueChange={setActiveMainTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
           <TabsTrigger value="reports" className="gap-2">
             <FileText className="w-4 h-4" />
             Rapports
           </TabsTrigger>
+          <TabsTrigger value="analysis" className="gap-2">
+            <BarChart3 className="w-4 h-4" />
+            Analyse
+          </TabsTrigger>
         </TabsList>
-
-        <TabsContent value="dashboards" className="mt-8">
-          <AnalyticsDashboardsSection language={language} />
-        </TabsContent>
-
-        <TabsContent value="analysis" className="mt-8">
-          <OptimizedSection
-            icon={TrendingUp}
-            title="Outils d'Analyse"
-            description="Analysez les performances et obtenez des insights IA"
-            iconColor="text-green-600"
-            searchPlaceholder="Rechercher dans les analyses..."
-            searchContext="general"
-            tabs={analysisTabs}
-          />
-        </TabsContent>
 
         <TabsContent value="reports" className="mt-8">
           <OptimizedSection
@@ -104,6 +83,18 @@ export function AnalysisReportsSections({ section, language = 'fr' }: AnalysisRe
             searchPlaceholder="Rechercher dans les rapports..."
             searchContext="general"
             tabs={reportTabs}
+          />
+        </TabsContent>
+
+        <TabsContent value="analysis" className="mt-8">
+          <OptimizedSection
+            icon={BarChart3}
+            title="Outils d'Analyse"
+            description="Analysez les performances et obtenez des insights IA"
+            iconColor="text-green-600"
+            searchPlaceholder="Rechercher dans les analyses..."
+            searchContext="general"
+            tabs={analysisTabs}
           />
         </TabsContent>
       </Tabs>

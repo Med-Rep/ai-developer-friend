@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,6 @@ import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { X, Search, Filter, RotateCcw } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
-import { VoiceSearchInput } from '@/components/common/VoiceSearchInput';
 
 interface AdvancedSearchFiltersProps {
   onSearch?: (filters: any) => void;
@@ -92,15 +92,16 @@ export function AdvancedSearchFilters({ onSearch, onReset }: AdvancedSearchFilte
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Requête principale avec reconnaissance vocale */}
+        {/* Requête principale */}
         <div>
           <Label htmlFor="search-query">Recherche</Label>
-          <VoiceSearchInput
+          <EnhancedInput
+            id="search-query"
             value={filters.query}
-            onChange={(value) => handleFilterChange('query', value)}
+            onChange={(e) => handleFilterChange('query', e.target.value)}
             placeholder="Mots-clés, termes juridiques..."
             context="search"
-            showVoiceButton={true}
+            enableVoice={true}
           />
         </div>
 
